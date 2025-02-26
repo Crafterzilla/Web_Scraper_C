@@ -1,3 +1,9 @@
+# exec
+*.vim
+web_scraper
+output/
+output/**
+
 # Prerequisites
 *.d
 
