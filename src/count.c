@@ -10,7 +10,7 @@ Input:
     word: Special word to count
 Ret: Returns the number of times word occured
 */
-int count_reoccurance(const FILE* html_data, const char* word) {
+int count_reoccurance(FILE* html_data, const char* word) {
     //Code goes here
 }
 
@@ -35,6 +35,6 @@ Ret: Returns the an array of the number of times those words occured
 in the order they came in.
 
 */
-int* count_all_reoccurances(const FILE* html_data, const char** words, const int size) {
+int* count_all_reoccurances(FILE* html_data, const char** words, const int size) {
     //Code goes here
 }
