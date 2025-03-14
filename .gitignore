@@ -1,6 +1,7 @@
 # exec
 *.vim
 web_scraper
+scraper
 output/
 output/**
 

@@ -3,7 +3,7 @@
 Here are some of the Rules, Plan, and Goal for the program
 
 ## Plan
-- [ ] Create Foundation for Coding
+- [x] Create Foundation for Coding
 - [ ] Fetch HTML Data and Store Into File
 - [ ] Parse and Count Reoccurances For Each File
 - [ ] Multithread HTML Fetching
@@ -49,6 +49,22 @@ Function Declaration in "./include/multithread.h"
 Function Implementation in "./src/multithread.c"
 
 Branch: multithread
+```
+
+### Reading User Input and Error Handling
+
+Create function to read user input and make it usable in the program.
+
+```
+Some key functions needed:
+    1.) Read Url File and create a const char**
+    2.) Read Special Words and craete a const char** and int*
+    3.) Read output files and create an array of FILE**
+
+Potential Function Declaration in "./include/util.h"
+Potential Function Implementation in "./src/util.c"
+
+Branch: io
 ```
 
 ## GOAL
