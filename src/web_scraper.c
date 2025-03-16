@@ -4,8 +4,6 @@ and outputs a file with the HTML Data
 */
 
 #include "../include/web_scraper.h"
-#include <stdio.h>
-#include <string.h>
 
 /*
 Desc: The basic single threaded web_scraper. This function
