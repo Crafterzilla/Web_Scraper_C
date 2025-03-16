@@ -24,6 +24,7 @@ Ret: An error code or success code
 enum CURL_CODE web_scraper(const char *filename, const char *website);
 size_t write_callback(char *data, size_t size, size_t bytes, void *ignore);
 
+// Temporary code for testing purposes.
 int main() {
 	web_scraper("output.html", "https://en.wikipedia.org/wiki/Dog");
 	return 0;
@@ -39,30 +40,39 @@ int main() {
 */
 enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	CURL *curl;
-	CURLcode result;
-
+	CURLcode result; 
+	
+	// Initialize the curl handle used as the input for other curl functions.
 	curl = curl_easy_init();
+	
+	// Error handling when curl is equal to NULL.
 	if (!curl) {
 		fprintf(stderr, "Error: HTTP request failed.\n");
 		return ERROR;
 	}
-
+	
+	// Sets the URL used to perform the fetch request.
 	curl_easy_setopt(curl, CURLOPT_URL, website);
+	
+	// Calls write_callback function each time a chunk of data is received.
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
+	
+	// Perform the fetch request with the specified CURLOPT options.
 	result = curl_easy_perform(curl);
+	// Error handling when the fetch request is unsuccessful.
 	if (result != CURLE_OK) {
 		fprintf(stderr, "Error: %s\n", curl_easy_strerror(result));
 		return ERROR;
 	}
-
+	
+	// Closes and frees up resources associated with this handle.
 	curl_easy_cleanup(curl);
 
 	return SUCCESS;
 }
 
 /*
-	The callback function passed to CURLOPT_WRITEFUNCTION.
+	This is the callback function passed to CURLOPT_WRITEFUNCTION.
 	Since CURLOPT_WRITEFUNCTION fetches data in chunks,
 	this function is called each time a new chunk of data is received.
 
