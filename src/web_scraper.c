@@ -37,26 +37,27 @@ int main() {
 
 	@param filename : The name of the output file
 	@param website: The website URL to fetch from
+	@return : SUCCESS or ERROR code
 */
 enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	CURL *curl;
-	CURLcode result; 
-	
+	CURLcode result;
+
 	// Initialize the curl handle used as the input for other curl functions.
 	curl = curl_easy_init();
-	
+
 	// Error handling when curl is equal to NULL.
 	if (!curl) {
 		fprintf(stderr, "Error: HTTP request failed.\n");
 		return ERROR;
 	}
-	
+
 	// Sets the URL used to perform the fetch request.
 	curl_easy_setopt(curl, CURLOPT_URL, website);
-	
+
 	// Calls write_callback function each time a chunk of data is received.
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-	
+
 	// Perform the fetch request with the specified CURLOPT options.
 	result = curl_easy_perform(curl);
 	// Error handling when the fetch request is unsuccessful.
@@ -64,7 +65,7 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 		fprintf(stderr, "Error: %s\n", curl_easy_strerror(result));
 		return ERROR;
 	}
-	
+
 	// Closes and frees up resources associated with this handle.
 	curl_easy_cleanup(curl);
 
@@ -80,6 +81,7 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	@param size : The value of size is always 1
 	@param bytes : The number of bytes that the chunk of data contains
 	@param *ignore : Ignore this.
+	@return : The number of bytes
 */
 size_t write_callback(char *data, size_t size, size_t bytes, void *ignore) {
 	// Loops through each byte of the data and sends it to stdout.
