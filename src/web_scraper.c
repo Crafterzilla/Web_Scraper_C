@@ -4,6 +4,8 @@ and outputs a file with the HTML Data
 */
 
 #include "../include/web_scraper.h"
+#include <stdio.h>
+#include <string.h>
 
 /*
 Desc: The basic single threaded web_scraper. This function
@@ -21,10 +23,11 @@ Ret: An error code or success code
 */
 
 enum CURL_CODE web_scraper(const char *filename, const char *website);
-size_t write_callback(char *data, size_t size, size_t bytes, void *ignore);
+size_t write_to_file(char *data, size_t size, size_t bytes, char *filename);
 
 // Temporary code for testing purposes.
 int main() {
+	// TODO: Remove need to specify file extension in filename parameter
 	web_scraper("output.html", "https://en.wikipedia.org/wiki/Dog");
 	return 0;
 }
@@ -54,8 +57,11 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	// Sets the URL used to perform the fetch request.
 	curl_easy_setopt(curl, CURLOPT_URL, website);
 
-	// Calls write_callback function each time a chunk of data is received.
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+	// Calls write_to_file each time a chunk of data is received.
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_file);
+
+	// Passes the filename as the fourth argument to write_to_file.
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, filename);
 
 	// Perform the fetch request with the specified CURLOPT options.
 	result = curl_easy_perform(curl);
@@ -75,18 +81,34 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	This is the callback function passed to CURLOPT_WRITEFUNCTION.
 	Since CURLOPT_WRITEFUNCTION fetches data in chunks,
 	this function is called each time a new chunk of data is received.
+	It appends the received data to a new file named after the specified filename.
 
 	@param *data : A pointer to the chunk of data delivered
 	@param size : The value of size is always 1
 	@param bytes : The number of bytes that the chunk of data contains
-	@param *ignore : Ignore this.
-	@return : The number of bytes
+	@param *filename : Name of the file that the data is being written to
+	@return : ERROR code or the number of bytes
 */
-size_t write_callback(char *data, size_t size, size_t bytes, void *ignore) {
-	// Loops through each byte of the data and sends it to stdout.
-	for (size_t i = 0; i < bytes; i++) {
-		printf("%c", data[i]);
+size_t write_to_file(char *data, size_t size, size_t bytes, char *filename) {
+	// File pointer to the file that the data is being written to
+	FILE *file;
+
+	// TODO: Prevent appending to existing file, e.g. create a new file each time
+	// Open the file in append mode
+	file = fopen(filename, "a");
+	// Error handling when the file cannot be opened.
+	if (file == NULL) {
+		printf("Error: Error opening file!\n");
+		return ERROR;
 	}
+
+	// Loops through each byte of the data and appends it to the file
+	for (size_t i = 0; i < bytes; i++) {
+		fprintf(file, "%c", data[i]);
+	}
+
+	// Close the file after writing to it
+	fclose(file);
 
 	/*
 		Required to return the number of bytes or else
