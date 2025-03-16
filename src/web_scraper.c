@@ -22,13 +22,21 @@ Ret: An error code or success code
 */
 
 enum CURL_CODE web_scraper(const char *filename, const char *website);
-size_t write_data_to_file(char *data, size_t item_size, size_t num_of_items, void *ignore);
+size_t write_callback(char *data, size_t size, size_t bytes, void *ignore);
 
 int main() {
 	web_scraper("output.html", "https://en.wikipedia.org/wiki/Dog");
 	return 0;
 }
 
+/*
+	This function uses libcurl's easy interface to fetch
+	raw HTML data from a specified website URL and writes
+	that output to a .html file with a specified filename.
+
+	@param filename : The name of the output file
+	@param website: The website URL to fetch from
+*/
 enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	CURL *curl;
 	CURLcode result;
@@ -40,7 +48,7 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	}
 
 	curl_easy_setopt(curl, CURLOPT_URL, website);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data_to_file);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 
 	result = curl_easy_perform(curl);
 	if (result != CURLE_OK) {
@@ -53,12 +61,26 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	return SUCCESS;
 }
 
-size_t write_data_to_file(char *data, size_t item_size, size_t num_of_items, void *ignore) {
-	size_t bytes = item_size * num_of_items;
+/*
+	The callback function passed to CURLOPT_WRITEFUNCTION.
+	Since CURLOPT_WRITEFUNCTION fetches data in chunks,
+	this function is called each time a new chunk of data is received.
 
+	@param *data : A pointer to the chunk of data delivered
+	@param size : The value of size is always 1
+	@param bytes : The number of bytes that the chunk of data contains
+	@param *ignore : Ignore this.
+*/
+size_t write_callback(char *data, size_t size, size_t bytes, void *ignore) {
+	// Loops through each byte of the data and sends it to stdout.
 	for (size_t i = 0; i < bytes; i++) {
 		printf("%c", data[i]);
 	}
 
+	/*
+		Required to return the number of bytes or else
+		the function will error if the amount differs from
+		the amount passed to the callback function.
+	*/
 	return bytes;
 }
