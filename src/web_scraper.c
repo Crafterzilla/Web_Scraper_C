@@ -20,5 +20,6 @@ Ret: An error code or success code
 
 */
 enum CURL_CODE web_scraper(const char* filename, const char* website) {
-    //Type code here
+  /* this is a test */
+  return 0; 
 }
