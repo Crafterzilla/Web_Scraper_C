@@ -14,4 +14,3 @@ clean:
 	@echo "Cleaning and removing files"
 	rm scraper
 	rm output/**
-	rmdir output
