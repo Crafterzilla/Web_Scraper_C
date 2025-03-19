@@ -4,7 +4,7 @@ Here are some of the Rules, Plan, and Goal for the program
 
 ## Plan
 - [x] Create Foundation for Coding
-- [ ] Fetch HTML Data and Store Into File
+- [x] Fetch HTML Data and Store Into File
 - [ ] Parse and Count Reoccurances For Each File
 - [ ] Multithread HTML Fetching
 - [ ] Terminal Front-End for Program

@@ -5,30 +5,26 @@
 #include <curl/curl.h>
 #include <stdlib.h>
 #include <string.h>
-//Add includes go here
 
 
 // Enum to represent if an error occured
 enum CURL_CODE {
     SUCCESS,
-    WEBSITE_NOT_FOUND,
     ERROR
-    //ADD MORE CODES FOR MORE ERRORS
 };
 
 
 /*
-Desc: The basic single threaded web_scraper. This function
-takes a website and checks and sees if the website is active
-or exists. If an error occurs, it returns a code representing
-the error. If success, then it prints out the HTML file to the
-./output/"filename paramter".html
+	This function uses libcurl's easy interface to fetch
+	raw HTML data from a specified website URL and writes
+	that output to a .html file with a specified filename.
+    In case the fetching fails, it returns that code for
+    error handling. It's single threaded and to be used for
+    the multithreaded solution.
 
-Input:
-    filename: Name of file for output file
-    website: website to be scraped and see HTML contents
-Ret: An error code or success code
-
+	@param filename : The name of the output file
+	@param website: The website URL to fetch from
+	@return : SUCCESS or ERROR code
 */
 enum CURL_CODE web_scraper(const char* filename, const char* website);
 
