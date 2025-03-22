@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//Add includes go here
+#include <ctype.h>
 
 /*
 Desc: Takes in an html file and counts the number of time
