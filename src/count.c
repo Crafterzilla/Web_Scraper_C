@@ -20,62 +20,53 @@ Input:
 Ret: Returns the number of times word occured
 */
 int count_reoccurance(FILE* html_data, const char* word) {
-    // Check if the file pointer or word is NULL; if so, return 0 (no occurrences)
+    // Check if either the file pointer or the word is NULL
     if (html_data == NULL || word == NULL) {
-        return 0;
+        return 0; // Return 0 as no occurrences can be counted
     }
 
-    // Reset the file pointer to the beginning of the file to ensure we read from the start
+    // Reset the file pointer to the beginning of the file to ensure all data is read
     rewind(html_data);
 
-    // Initialize a counter to keep track of the number of occurrences of the word
+    // Initialize a counter to track the occurrences of the word
     int count = 0;
-    // Create a buffer to store each line read from the file
+    // Buffer to store each line read from the file
     char buffer[1024];
-    // Get the length of the word to search for
+    // Length of the word to search for
     size_t word_len = strlen(word);
 
-    // Convert the search word to lowercase for case-insensitive comparison
-    char lowercase_word[word_len + 1];  // +1 for the null terminator
+    // Convert the search word to lowercase for case-insensitive matching
+    char lowercase_word[word_len + 1]; // Allocate space for the lowercase word (+1 for null terminator)
     for (size_t i = 0; i < word_len; i++) {
-        lowercase_word[i] = tolower(word[i]);   // Convert each character to lowercase
+        lowercase_word[i] = tolower(word[i]); // Convert each character to lowercase
     }
-    lowercase_word[word_len] = '\0';  // Null-terminate the lowercase word
+    lowercase_word[word_len] = '\0'; // Null-terminate the string
 
-    // Print the lowercase word being searched for (for debugging purposes)
-    // printf("Searching for the word: '%s'\n", lowercase_word);
-
-    // Read the file line by line
+    // Read the HTML file line by line
     while (fgets(buffer, sizeof(buffer), html_data)) {
-
-        //Print the current line being processed (for debugging purposes)
-        //printf("Processing line: %s", buffer);
-
         // Convert the current line to lowercase for case-insensitive comparison
-        char lowercase_buffer[sizeof(buffer)]; // Create a buffer for the lowercase line
+        char lowercase_buffer[sizeof(buffer)];
         for (size_t i = 0; i < strlen(buffer); i++) {
-            lowercase_buffer[i] = tolower(buffer[i]);   // Convert each character to lowercase
+            lowercase_buffer[i] = tolower(buffer[i]); // Convert each character to lowercase
         }
-        lowercase_buffer[strlen(buffer)] = '\0';  // Null-terminate the lowercase buffer
+        lowercase_buffer[strlen(buffer)] = '\0'; // Null-terminate the buffer
 
         // Search for the lowercase word in the lowercase buffer
-        char* pos = lowercase_buffer;   // Start searching from the beginning of the buffer
-        while ((pos = strstr(pos, lowercase_word)) != NULL) {
-            // Check if the found word is a whole word
-            if ((pos == lowercase_buffer || !isalnum(*(pos - 1))) &&    // Check the character before the word
-                (!isalnum(*(pos + word_len)) || ispunct(*(pos + word_len)) || *(pos + word_len) == '\0')) { // Check the character after the word
-                count++; // Increment the count if it's a whole word match
-
-                // Print the updated count (for debugging)
-                // printf("Valid occurrence. Count incremented to %d\n", count);
+        char* pos = lowercase_buffer; // Pointer to the current position in the line
+        while ((pos = strstr(pos, lowercase_word)) != NULL) { // Find the next occurrence of the word
+            // Check if the match is a whole word
+            if ((pos == lowercase_buffer || !isalnum(*(pos - 1))) && // Ensure the character before is not alphanumeric
+                (!isalnum(*(pos + word_len)) || *(pos + word_len) == '\0')) { // Ensure the character after is not alphanumeric
+                count++; // Increment the occurrence count
             }
-            pos += word_len;  // Move the search position forward to avoid overlapping matches
+            pos += word_len; // Move the pointer forward to continue searching
         }
     }
 
-    // Reset the file pointer for future reads
-    rewind(html_data);  
-    // Return the total count of word occurrences
+    // Reset the file pointer for subsequent reads
+    rewind(html_data);
+
+    // Return the total count of occurrences
     return count;
 }
 
@@ -104,22 +95,23 @@ TODO: STILL NEED TO DEBUG!
 
 */
 int* count_all_reoccurances(FILE* html_data, const char** words, const int size) {
-    //Check if the file pointer, words array, or size is invalid; if so, return NULL
+    // Check if the input parameters are invalid
     if (html_data == NULL || words == NULL || size <= 0) {
-        return NULL;
+        return NULL; // Return NULL if the file, words array, or size is invalid
     }
 
-    //Allocate memory for an array to store the counts of each word
+    // Allocate memory for the result array to store counts of each word
     int* counts = (int*)malloc(size * sizeof(int));
-    //Check if memory allocation failed; if so, return NULL
     if (counts == NULL) {
-        return NULL;
-    }
-    
-    //Loop through each word in the array and count its occurrences in the file
-    for (int i = 0; i < size; i++) {
-        counts[i] = count_reoccurance(html_data, words[i]); //Store the count for current word
+        return NULL; // Return NULL if memory allocation fails
     }
 
-    return counts;  //Return the array of counts
+    // Loop through each word in the `words` array
+    for (int i = 0; i < size; i++) {
+        // Count the occurrences of the current word using count_reoccurance
+        counts[i] = count_reoccurance(html_data, words[i]);
+    }
+
+    // Return the array containing the counts
+    return counts;
 }
