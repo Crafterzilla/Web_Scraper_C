@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//Add includes go here
+#include <ctype.h>
 
 /*
 Desc: Takes in an html file and counts the number of time
@@ -38,6 +38,6 @@ Ret: Returns the an array of the number of times those words occured
 in the order they came in.
 
 */
-int* count_all_reoccurances(FILE* html_data, const char** words, const int size);
+int* count_all_reoccurances(FILE* html_data, char** words, const int size);
 
 #endif
