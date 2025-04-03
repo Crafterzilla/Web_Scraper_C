@@ -38,6 +38,6 @@ Ret: Returns the an array of the number of times those words occured
 in the order they came in.
 
 */
-int* count_all_reoccurances(FILE* html_data, const char** words, const int size);
+int* count_all_reoccurances(FILE* html_data, char** words, const int size);
 
 #endif

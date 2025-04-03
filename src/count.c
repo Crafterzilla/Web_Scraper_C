@@ -54,11 +54,17 @@ int count_reoccurance(FILE* html_data, const char* word) {
         // Search for the lowercase word in the lowercase buffer
         char* pos = lowercase_buffer; // Pointer to the current position in the line
         while ((pos = strstr(pos, lowercase_word)) != NULL) { // Find the next occurrence of the word
+
+            //Keeping those code commented in case word counting is more strict
+
             // Check if the match is a whole word
-            if ((pos == lowercase_buffer || !isalnum(*(pos - 1))) && // Ensure the character before is not alphanumeric
-                (!isalnum(*(pos + word_len)) || *(pos + word_len) == '\0')) { // Ensure the character after is not alphanumeric
-                count++; // Increment the occurrence count
-            }
+            /* if ((pos == lowercase_buffer || !isalnum(*(pos - 1))) && // Ensure the character before is not alphanumeric */
+            /*     (!isalnum(*(pos + word_len)) || *(pos + word_len) == '\0')) { // Ensure the character after is not alphanumeric */
+            /*     count++; // Increment the occurrence count */
+            /* } */
+            
+            // Counts plus one whenever strstr finds a "needle" in "haystack" (substring in string)
+            count++;
             pos += word_len; // Move the pointer forward to continue searching
         }
     }
@@ -94,7 +100,7 @@ in the order they came in.
 TODO: STILL NEED TO DEBUG!
 
 */
-int* count_all_reoccurances(FILE* html_data, const char** words, const int size) {
+int* count_all_reoccurances(FILE* html_data, char** words, const int size) {
     // Check if the input parameters are invalid
     if (html_data == NULL || words == NULL || size <= 0) {
         return NULL; // Return NULL if the file, words array, or size is invalid
