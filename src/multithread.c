@@ -1,4 +1,8 @@
 #include "../include/multithread.h"
+#include "../include/web_scraper.h"
+#include "../include/count.h"
+
+#define MAX_THREADS 16  // Limit on number of threads for safety and performance
 
 /* 
 Desc: Takes in list of URLS gathered from URL file. Then it calls web_scraper
@@ -7,32 +11,171 @@ then executes and runs the scraper on the websites at the same time. This will r
 in multiple files in ./output for each URL. Should overall be very fast. Handles invalid
 or URLs that are not functional with web_scraper.h implementation. Returns code for error
 if anything occurs with the multithreading
-
-Input:
-    URL_list: An array of strings that represent potentially valid URLS
-    size: Size of the array of strings
-Ret: Any thread error code
 */
-enum THREAD_CODE multifetch_websites(const char** URL_list, const int size) {
-    // Your code here
 
-    //Use web_scraper("filename", "URL_list[i]");
+/*
+ * Struct: scrape_job
+ * ------------------
+ * Used to pass URL and output filename into each scraping thread.
+ */
+typedef struct {
+    const char* url;         // The URL to scrape
+    const char* filename;    // The file to save the scraped HTML into
+} scrape_job;
+
+/*
+ * Struct: count_job
+ * -----------------
+ * Used to pass all necessary info into each counting thread.
+ */
+typedef struct {
+    FILE* file;              // File pointer to HTML file
+    const char** words;      // Array of words to count
+    int word_count;          // Number of words in the array
+    int* result_array;       // Shared result array (indexed by word index)
+    int index;               // Index of the file (for debugging, if needed)
+} count_job;
+
+/*
+ * Function: scrape_thread_func
+ * ----------------------------
+ * This function is run by each scraper thread. It calls the web_scraper() function
+ * to fetch a URL and save it to a file.
+ *
+ * arg: A scrape_job struct containing the URL and filename.
+ */
+void* scrape_thread_func(void* arg) {
+    scrape_job* job = (scrape_job*)arg;
+
+    // Call web_scraper to fetch and save the site contents
+    if (web_scraper(job->filename, job->url) != NO_ERROR) {
+        fprintf(stderr, "Error scraping URL: %s\n", job->url);
+    }
+
+    // Clean up heap-allocated filename and struct
+    free((void*)job->filename);
+    free(job);
+
+    return NULL;
 }
 
+/*
+ * Function: count_thread_func
+ * ---------------------------
+ * This function is run by each counting thread. It opens a file and uses
+ * count_all_reoccurances() to count how often each word appears.
+ *
+ * arg: A count_job struct containing the file, words, and result pointer.
+ */
+void* count_thread_func(void* arg) {
+    count_job* job = (count_job*)arg;
+
+    // Count occurrences of all words in this file
+    int* counts = count_all_reoccurances(job->file, (char**)job->words, job->word_count);
+
+    // If counting was successful, accumulate results
+    if (counts != NULL) {
+        for (int i = 0; i < job->word_count; ++i) {
+            job->result_array[i] += counts[i];  // Accumulate into shared total
+        }
+        free(counts);
+    }
+
+    // Close the file and clean up the job struct
+    fclose(job->file);
+    free(job);
+    return NULL;
+}
+
+/*
+ * Function: multifetch_websites
+ * -----------------------------
+ * Uses multithreading to fetch all websites in parallel.
+ *
+ * URL_list: Array of URLs to fetch
+ * size: Number of URLs in the list
+ *
+ * returns: NO_ERROR on success, FAILURE on failure
+ */
+
+enum THREAD_CODE multifetch_websites(const char** URL_list, const int size) {
+    pthread_t threads[MAX_THREADS];
+
+    for (int i = 0; i < size; ++i) {
+        // Allocate and populate a job for this thread
+        scrape_job* job = malloc(sizeof(scrape_job));
+        job->url = URL_list[i];
+
+        // Construct output filename (e.g., "output/site_0.html")
+        char* filename = malloc(64);
+        snprintf(filename, 64, "output/site_%d.html", i);
+        job->filename = filename;
+
+        // Create the scraping thread
+        if (pthread_create(&threads[i], NULL, scrape_thread_func, job) != 0) {
+            perror("Failed to create thread for scraper");
+            return FAILURE;
+        }
+    }
+
+    // Wait for all threads to complete
+    for (int i = 0; i < size; ++i) {
+        pthread_join(threads[i], NULL);
+    }
+
+    return NO_ERROR;
+}
 
 /* 
 Desc: Takes in an array of file objects that point to the files in ./output. It counts the number of times those
 words occur in each file using count's implemenation and does it in paralell. Once it counts all the reoccurances
 and puts them into reports (Done by count.h), it counts the total times the words occurred in ALL files.
 
-Input:
-    output_HTML_files: An array of file objects to be read from
-    file_array_size: size of output_HTML_files
-    words: array of words to be counted
-    word_size: number of words in array words
-Ret: Any thread error code
-*/
+ * Function: multicount
+ * --------------------
+ * Uses multithreading to count word occurrences in all HTML files.
+ *
+ * output_HTML_files: Array of file pointers to opened HTML files
+ * file_array_size: Number of files
+ * words: Array of words to search for
+ * word_size: Number of words in the array
+ *
+ * returns: NO_ERROR on success, FAILURE on failure
+ */
+
 enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, const char** words, const int word_size) {
-    // Your code here
-    // Use count_all_reoccurances()
+    pthread_t threads[MAX_THREADS];
+
+    // Shared result array initialized to 0 for each word
+    int* result_array = (int*)calloc(word_size, sizeof(int));
+
+    for (int i = 0; i < file_array_size; ++i) {
+        // Set up a job for this thread
+        count_job* job = malloc(sizeof(count_job));
+        job->file = output_HTML_files[i];
+        job->words = words;
+        job->word_count = word_size;
+        job->result_array = result_array;
+        job->index = i;
+
+        // Create the counting thread
+        if (pthread_create(&threads[i], NULL, count_thread_func, job) != 0) {
+            perror("Failed to create thread for counter");
+            return FAILURE;
+        }
+    }
+
+    // Wait for all threads to finish
+    for (int i = 0; i < file_array_size; ++i) {
+        pthread_join(threads[i], NULL);
+    }
+
+    // Output final aggregated results
+    printf("Total word occurrences:\n");
+    for (int i = 0; i < word_size; ++i) {
+        printf("%s: %d\n", words[i], result_array[i]);
+    }
+
+    free(result_array);
+    return NO_ERROR;
 }
