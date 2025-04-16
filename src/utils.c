@@ -3,6 +3,8 @@
 
 #include "../include/utils.h"
 
+char* readline_from_file(FILE* file);
+
 /*
 Desc: Read file from user like urls.txt. With such file,
 read each line and return an array of strings.
@@ -11,14 +13,14 @@ Input:
     const char* filename: Name of file to be read
 Ret: Returns a struct url_array that contain ptr to array of strings and its size
 */
-url_array read_urls_file(const char* filename) {
+str_array read_str_file(const char* filename) {
     // Attempt to open file in read mode
     FILE* file = fopen(filename, "r");
 
     // If some error occured, inform user and return NULL
     if (!file) {
         perror("Error opening file");
-        url_array null = {NULL, 0};
+        str_array null = {NULL, 0};
         return null;
     }
     
@@ -52,7 +54,7 @@ url_array read_urls_file(const char* filename) {
     }
    
     // Create url_array struct to return
-    url_array ret_url_array = {url_arr, url_arr_size};
+    str_array ret_url_array = {url_arr, url_arr_size};
 
     //Close file;
     fclose(file);
@@ -114,4 +116,72 @@ char* readline_from_file(FILE* file) {
     }
 
     return url;
+}
+
+
+/*
+Desc: This function is to be used to write the amount of times a word has been counted
+for an html file to a file.
+
+Input:
+    char* filename: Name of the file that the output will be written to
+    char** words: array of words that were counted from the html file
+    int* count: the number of times those words were counted from the html file
+    const int size: number of words counted
+*/
+void write_count_results_to_file(char* filename, char** words, int* count, const int size) {
+    // Open file for writing
+    FILE* file = fopen(filename, "w");
+    if (!file) {
+        perror("Failed to open file for writing counting results");
+    }
+    
+    // For each word print out the word and count onto the file
+    for (int i = 0; i < size; i++) {
+        fprintf(file, "%s: %d\n", words[i], count[i]);
+    }
+    
+    // Close file
+    fclose(file);
+}
+
+
+/*
+Desc: Takes in a url_array and frees the memory back to the OS
+
+Input:
+    url_array* arr: Name of file to be read
+*/
+void free_str_array(str_array arr) {
+    // Free memory for url_array
+    for (int i = 0; i < arr.size; i++) {
+        printf("String: %s\n", arr.strings[i]);
+        free(arr.strings[i]);
+        arr.strings[i] = NULL;
+    }
+    free(arr.strings);
+}
+
+
+/*
+Desc: Reads the html files that were created by web_scraper.c and then creates
+an array of FILE* to then be used for multicount
+
+Input:
+    int size: Number of html files created
+*/
+FILE** create_file_array(int size) {
+    FILE** files = (FILE**)malloc(sizeof(FILE*) * size);
+    for (int i = 0; i < size; i++) {
+        char filename[64];
+        snprintf(filename, 64, "output/site_%d.html", i);
+        files[i] = fopen(filename, "r");
+
+        if (!files[i]) {
+            perror("Failed to open output file");
+            return NULL;
+        }
+    }
+
+    return files;
 }

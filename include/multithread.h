@@ -7,8 +7,7 @@
 #include <pthread.h>
 #include "../include/web_scraper.h"
 #include "../include/count.h"
-//Add includes go here
-
+#include "../include/utils.h"
 
 // Enum to represent if an error occured
 enum THREAD_CODE {
@@ -32,7 +31,7 @@ Input:
 Ret: Any thread error code
 */
 
-enum THREAD_CODE multifetch_websites(const char** URL_list, const int size);
+enum THREAD_CODE multifetch_websites(char** URL_list, const int size);
     
 
 /* 
@@ -47,6 +46,6 @@ Input:
     word_size: number of words in array words
 Ret: Any thread error code
 */
-enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, const char** words, const int word_size);
+enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, char** words, const int word_size);
 
 #endif

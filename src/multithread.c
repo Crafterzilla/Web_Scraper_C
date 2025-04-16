@@ -1,6 +1,4 @@
 #include "../include/multithread.h"
-#include "../include/web_scraper.h"
-#include "../include/count.h"
 
 #define MAX_THREADS 16  // Limit on number of threads for safety and performance
 
@@ -19,8 +17,8 @@ if anything occurs with the multithreading
  * Used to pass URL and output filename into each scraping thread.
  */
 typedef struct {
-    const char* url;         // The URL to scrape
-    const char* filename;    // The file to save the scraped HTML into
+    char* url;         // The URL to scrape
+    char* filename;    // The file to save the scraped HTML into
 } scrape_job;
 
 /*
@@ -30,10 +28,11 @@ typedef struct {
  */
 typedef struct {
     FILE* file;              // File pointer to HTML file
-    const char** words;      // Array of words to count
+    char** words;      // Array of words to count
     int word_count;          // Number of words in the array
     int* result_array;       // Shared result array (indexed by word index)
     int index;               // Index of the file (for debugging, if needed)
+    char* filename;          // File to save the contents of site count
 } count_job;
 
 /*
@@ -46,6 +45,7 @@ typedef struct {
  */
 void* scrape_thread_func(void* arg) {
     scrape_job* job = (scrape_job*)arg;
+    printf("Ptr: %p\n", (void*)job);
 
     // Call web_scraper to fetch and save the site contents
     if (web_scraper(job->filename, job->url) != NO_ERROR) {
@@ -53,7 +53,7 @@ void* scrape_thread_func(void* arg) {
     }
 
     // Clean up heap-allocated filename and struct
-    free((void*)job->filename);
+    free(job->filename);
     free(job);
 
     return NULL;
@@ -73,6 +73,9 @@ void* count_thread_func(void* arg) {
     // Count occurrences of all words in this file
     int* counts = count_all_reoccurances(job->file, (char**)job->words, job->word_count);
 
+    // Print individual count on a seperate file
+    write_count_results_to_file(job->filename, job->words, counts, job->word_count);
+
     // If counting was successful, accumulate results
     if (counts != NULL) {
         for (int i = 0; i < job->word_count; ++i) {
@@ -81,8 +84,8 @@ void* count_thread_func(void* arg) {
         free(counts);
     }
 
-    // Close the file and clean up the job struct
-    fclose(job->file);
+    // Clean up the job struct
+    free(job->filename);
     free(job);
     return NULL;
 }
@@ -98,16 +101,16 @@ void* count_thread_func(void* arg) {
  * returns: NO_ERROR on success, FAILURE on failure
  */
 
-enum THREAD_CODE multifetch_websites(const char** URL_list, const int size) {
+enum THREAD_CODE multifetch_websites(char** URL_list, const int size) {
     pthread_t threads[MAX_THREADS];
-
+    
     for (int i = 0; i < size; ++i) {
-        // Allocate and populate a job for this thread
-        scrape_job* job = malloc(sizeof(scrape_job));
+        //Init memory for job struct and it's values
+        scrape_job* job = (scrape_job*)malloc(sizeof(scrape_job));
         job->url = URL_list[i];
 
         // Construct output filename (e.g., "output/site_0.html")
-        char* filename = malloc(64);
+        char* filename = (char*)malloc(sizeof(char) * 64);
         snprintf(filename, 64, "output/site_%d.html", i);
         job->filename = filename;
 
@@ -143,7 +146,7 @@ and puts them into reports (Done by count.h), it counts the total times the word
  * returns: NO_ERROR on success, FAILURE on failure
  */
 
-enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, const char** words, const int word_size) {
+enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, char** words, const int word_size) {
     pthread_t threads[MAX_THREADS];
 
     // Shared result array initialized to 0 for each word
@@ -158,6 +161,11 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size,
         job->result_array = result_array;
         job->index = i;
 
+        // Construct output filename (e.g., "output/site_0.html")
+        char* filename = (char*)malloc(sizeof(char) * 128);
+        snprintf(filename, 128, "output/site_%d_count.txt", i);
+        job->filename = filename;
+
         // Create the counting thread
         if (pthread_create(&threads[i], NULL, count_thread_func, job) != 0) {
             perror("Failed to create thread for counter");
@@ -171,7 +179,7 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size,
     }
 
     // Output final aggregated results
-    printf("Total word occurrences:\n");
+    printf("Total word occurrences in ALL FILES combined:\n");
     for (int i = 0; i < word_size; ++i) {
         printf("%s: %d\n", words[i], result_array[i]);
     }
