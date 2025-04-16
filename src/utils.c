@@ -155,7 +155,6 @@ Input:
 void free_str_array(str_array arr) {
     // Free memory for url_array
     for (int i = 0; i < arr.size; i++) {
-        printf("String: %s\n", arr.strings[i]);
         free(arr.strings[i]);
         arr.strings[i] = NULL;
     }

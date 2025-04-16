@@ -45,7 +45,6 @@ typedef struct {
  */
 void* scrape_thread_func(void* arg) {
     scrape_job* job = (scrape_job*)arg;
-    printf("Ptr: %p\n", (void*)job);
 
     // Call web_scraper to fetch and save the site contents
     if (web_scraper(job->filename, job->url) != NO_ERROR) {
@@ -179,7 +178,7 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size,
     }
 
     // Output final aggregated results
-    printf("Total word occurrences in ALL FILES combined:\n");
+    printf("\nTotal word occurrences in ALL FILES combined:\n");
     for (int i = 0; i < word_size; ++i) {
         printf("%s: %d\n", words[i], result_array[i]);
     }
