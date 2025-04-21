@@ -129,13 +129,16 @@ Input:
     int* count: the number of times those words were counted from the html file
     const int size: number of words counted
 */
-void write_count_results_to_file(char* filename, char** words, int* count, const int size) {
+void write_count_results_to_file(char* filename, char* url, char** words, int* count, const int size) {
     // Open file for writing
     FILE* file = fopen(filename, "w");
     if (!file) {
         perror("Failed to open file for writing counting results");
     }
-    
+        
+    // Print url to output count file
+    fprintf(file, "%s\n", url);
+
     // For each word print out the word and count onto the file
     for (int i = 0; i < size; i++) {
         fprintf(file, "%s: %d\n", words[i], count[i]);

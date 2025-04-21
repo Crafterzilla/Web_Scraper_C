@@ -36,7 +36,7 @@ Input:
     int* count: the number of times those words were counted from the html file
     const int size: number of words counted
 */
-void write_count_results_to_file(char* filename, char** words, int* count, const int size);
+void write_count_results_to_file(char* filename, char* url, char** words, int* count, const int size);
 
 /*
 Desc: Takes in a url_array and frees the memory back to the OS

@@ -25,6 +25,7 @@ typedef struct {
  * Used to pass all necessary info into each counting thread.
  */
 typedef struct {
+    char* url;
     FILE* file;              // File pointer to HTML file
     char** words;      // Array of words to count
     int word_count;          // Number of words in the array
@@ -71,7 +72,7 @@ void* count_thread_func(void* arg) {
     int* counts = count_all_reoccurances(job->file, (char**)job->words, job->word_count);
 
     // Print individual count on a seperate file
-    write_count_results_to_file(job->filename, job->words, counts, job->word_count);
+    write_count_results_to_file(job->filename, job->url, job->words, counts, job->word_count);
 
     // If counting was successful, accumulate results
     if (counts != NULL) {
@@ -144,15 +145,16 @@ and puts them into reports (Done by count.h), it counts the total times the word
  * returns: NO_ERROR on success, FAILURE on failure
  */
 
-enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, char** words, const int word_size) {
-    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * file_array_size);
+enum THREAD_CODE multicount(FILE** output_HTML_files, str_array urls, char** words, const int word_size) {
+    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * urls.size);
 
     // Shared result array initialized to 0 for each word
     int* result_array = (int*)calloc(word_size, sizeof(int));
 
-    for (int i = 0; i < file_array_size; ++i) {
+    for (int i = 0; i < urls.size; ++i) {
         // Set up a job for this thread
         count_job* job = malloc(sizeof(count_job));
+        job->url = urls.strings[i];
         job->file = output_HTML_files[i];
         job->words = words;
         job->word_count = word_size;
@@ -172,7 +174,7 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size,
     }
 
     // Wait for all threads to finish
-    for (int i = 0; i < file_array_size; ++i) {
+    for (int i = 0; i < urls.size; ++i) {
         pthread_join(threads[i], NULL);
     }
 

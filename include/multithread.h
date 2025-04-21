@@ -46,6 +46,6 @@ Input:
     word_size: number of words in array words
 Ret: Any thread error code
 */
-enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, char** words, const int word_size);
+enum THREAD_CODE multicount(FILE** output_HTML_files, str_array urls, char** words, const int word_size);
 
 #endif

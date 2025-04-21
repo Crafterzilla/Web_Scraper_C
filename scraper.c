@@ -27,7 +27,12 @@ int main(const int argc, const char** argv) {
         fprintf(stderr, "Error scraping websites\n");
         return 1;
     }
-        
+    
+    // Print URL ID in stdout
+    for (int i = 0; i < url_arr.size; i++) {
+        printf("[%d] ID for %s\n", i, url_arr.strings[i]);
+    }
+ 
     // Step 3: Open scraped files    
     FILE** files = create_file_array(url_arr.size);
 
@@ -35,7 +40,7 @@ int main(const int argc, const char** argv) {
     str_array words_arr = read_str_file(argv[2]);
     
     // Step 5: Multithreading couting of all files and each of the words
-    if (multicount(files, url_arr.size, words_arr.strings, words_arr.size) != NO_ERROR) {
+    if (multicount(files, url_arr, words_arr.strings, words_arr.size) != NO_ERROR) {
         fprintf(stderr, "Error counting html files\n");
         return 1;
     };
