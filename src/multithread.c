@@ -1,7 +1,5 @@
 #include "../include/multithread.h"
 
-#define MAX_THREADS 16  // Limit on number of threads for safety and performance
-
 /* 
 Desc: Takes in list of URLS gathered from URL file. Then it calls web_scraper
 multiple times for each different URL to put into a thread pool. The thread pool
@@ -101,7 +99,7 @@ void* count_thread_func(void* arg) {
  */
 
 enum THREAD_CODE multifetch_websites(char** URL_list, const int size) {
-    pthread_t threads[MAX_THREADS];
+    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * size);
     
     for (int i = 0; i < size; ++i) {
         //Init memory for job struct and it's values
@@ -124,7 +122,8 @@ enum THREAD_CODE multifetch_websites(char** URL_list, const int size) {
     for (int i = 0; i < size; ++i) {
         pthread_join(threads[i], NULL);
     }
-
+    
+    free(threads);
     return NO_ERROR;
 }
 
@@ -146,7 +145,7 @@ and puts them into reports (Done by count.h), it counts the total times the word
  */
 
 enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size, char** words, const int word_size) {
-    pthread_t threads[MAX_THREADS];
+    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * file_array_size);
 
     // Shared result array initialized to 0 for each word
     int* result_array = (int*)calloc(word_size, sizeof(int));
@@ -182,7 +181,8 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, const int file_array_size,
     for (int i = 0; i < word_size; ++i) {
         printf("%s: %d\n", words[i], result_array[i]);
     }
-
+    
+    free(threads);
     free(result_array);
     return NO_ERROR;
 }
