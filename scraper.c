@@ -2,11 +2,13 @@
 #include "include/utils.h"
 #include <stdio.h>
 
+
 int main(const int argc, const char** argv) {
     puts("Ivin, Ken, Juli, Osmar Epic Scraper 5000 v1");
     puts("HTML files are places in ./output/");
-    puts("Individual count files are places in ./output/");
-
+    puts("Individual count files are places in ./output/\n");
+    
+    // If there are no three args, then exit program!
     if (argc != 3) {
         fprintf(stderr, "Missing args!!!\n");
         fprintf(stderr, "Run with ./scraper html.file word.file\n");
@@ -28,10 +30,13 @@ int main(const int argc, const char** argv) {
         return 1;
     }
     
-    // Print URL ID in stdout
+    // Extra step: Print URL ID in stdout and to a file
+    FILE* id_file = fopen("./output/id.txt", "w");
     for (int i = 0; i < url_arr.size; i++) {
+        fprintf(id_file, "[%d] ID for %s\n", i, url_arr.strings[i]);
         printf("[%d] ID for %s\n", i, url_arr.strings[i]);
     }
+    fclose(id_file);
  
     // Step 3: Open scraped files    
     FILE** files = create_file_array(url_arr.size);
@@ -51,6 +56,7 @@ int main(const int argc, const char** argv) {
     for (int i = 0; i < url_arr.size; i++) {
         fclose(files[i]);
     }
+
     free(files);
     free_str_array(url_arr);
     free_str_array(words_arr);
