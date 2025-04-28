@@ -1,6 +1,79 @@
 #include "include/multithread.h"
 #include "include/utils.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <dirent.h>
+#include <unistd.h>
 
+/*
+ * Function: remove_all
+ * ----------------------------
+ * This will remove all files in output directory. It ignores "." and ".." directories and
+ * deletes everything else by looping though all the filenames until NULL is eached. 
+ *
+ * Return -1 if some failure occurs in this process and 0 if it succeds. 
+ */
+int remove_all(const char *path) {
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+
+    // If file open failed, return -1
+    if (!dir) {
+        perror("opendir failed");
+        return -1;
+    }
+    
+    // Read all contents of output and delete each file/file
+    while ((entry = readdir(dir)) != NULL) {
+        // Skip "." and ".."
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue;
+        
+        // Create fullpath which is output/filename
+        char fullpath[4096];
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+        
+        // Delete the file
+        if (remove(fullpath) == -1) {
+            perror("rm file failed");
+            return -1;
+        }
+    }
+
+    closedir(dir);
+    return 0;
+}
+
+/*
+ * Function: init_directories
+ * ----------------------------
+ * This will create the output directory. It will also delete all contents within that directory if it
+ * does exist. This is mainly due to have libcurl output files have to be appended to the end of the file
+ * rather than written to since it gathers data in chucks. 
+ *
+ * Return -1 if some failure occurs in this process and 0 if it succeds. 
+ */
+int init_directories() {
+    // Output Path
+    const char* path = "output";
+
+    // Make the directory for output. If it exists, delete everything inside that directory
+    if (mkdir(path, 0755) == -1) {
+        if (errno != EEXIST) {
+            // Directory does not exists and creating it failed, return -1
+            // Some other error
+            perror("Mkdir output failed");
+            return -1;
+        }
+        else {
+            if (remove_all(path) == -1) {
+                return -1;
+            };
+        }
+    }
+    return 0;
+}
 
 int main(const int argc, const char** argv) {
     puts("Ivin, Ken, Juli, Osmar Epic Scraper 5000 v1");
@@ -14,11 +87,11 @@ int main(const int argc, const char** argv) {
         return 1;
     }
     
-    // Delete any files in ./output
-    // This is mainly due to libcurl appending in chucks. 
-    // Temporary will find better solution later
-    system("rm ./output/**");
-
+    // Step 0: Create output file or erase everything in it
+    // Create the output directory or remove all files is it already exists
+    if (init_directories() == -1) {
+        perror("Failed to init output directory!");
+    }
 
     //Step 1: Read urls from file
     str_array url_arr = read_str_file(argv[1]);

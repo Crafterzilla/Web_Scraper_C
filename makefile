@@ -5,7 +5,6 @@ build:
 	@echo "Building"
 	@echo "Header files in include"
 	@echo "Implemention/Code in src"
-	mkdir output
 	gcc -std=c11 -pedantic -pthread -lcurl -o scraper scraper.c ./src/*.c -lm
 
 run:
