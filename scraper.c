@@ -110,21 +110,18 @@ int main(const int argc, const char** argv) {
     }
     fclose(id_file);
     
-    puts("Step 3");
     // Step 3: Open scraped files    
     FILE** files = create_file_array(url_arr.size);
 
     // Step 4: Read words from file
     str_array words_arr = read_str_file(argv[2]);
-    
-    puts("Step 4");
+
     // Step 5: Multithreading couting of all files and each of the words
     if (multicount(files, url_arr, words_arr.strings, words_arr.size) != NO_ERROR) {
         fprintf(stderr, "Error counting html files\n");
         return 1;
     };
 
-    puts("Step 5");
 
     // Step 6: FREE ALL MEMORY
     // Free files array
