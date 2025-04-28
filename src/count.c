@@ -76,7 +76,7 @@ int count_reoccurance(FILE* html_data, const char* word) {
     return count;
 }
 
-
+//<html>Dog dog dogdog dogs</html>
 /*
 Desc: Takes in an html file and counts all the words'
 reoccurance. The array of strings will be in sorted 

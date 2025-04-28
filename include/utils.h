@@ -25,6 +25,15 @@ Ret: Returns a struct url_array that contain ptr to array of strings and its siz
 */
 str_array read_str_file(const char* filename);
 
+/*
+ * Function: open_file
+ * ----------------------------
+ * If file exists, open in append mode.
+ * If file does not exist, open in write mode.
+ *
+ * arg: A scrape_job struct containing the URL and filename.
+ */
+FILE *open_file(const char *filename);
 
 /*
 Desc: This function is to be used to write the amount of times a word has been counted

@@ -6,14 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-// Enum to represent if an error occured
-enum CURL_CODE {
-    SUCCESS,
-    ERROR
-};
-
-
 /*
 	This function uses libcurl's easy interface to fetch
 	raw HTML data from a specified website URL and writes
@@ -26,7 +18,7 @@ enum CURL_CODE {
 	@param website: The website URL to fetch from
 	@return : SUCCESS or ERROR code
 */
-enum CURL_CODE web_scraper(const char* filename, const char* website);
+CURLcode web_scraper(const char* filename, const char* website);
 
 
 

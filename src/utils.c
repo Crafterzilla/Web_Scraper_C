@@ -2,6 +2,7 @@
 // so that data can be used for the rest of the execution of program
 
 #include "../include/utils.h"
+#include <string.h>
 
 char* readline_from_file(FILE* file);
 
@@ -60,6 +61,30 @@ str_array read_str_file(const char* filename) {
     fclose(file);
     return ret_url_array;
 }
+
+
+/*
+ * Function: open_file
+ * ----------------------------
+ * If file exists, open in append mode.
+ * If file does not exist, open in write mode.
+ *
+ * arg: A scrape_job struct containing the URL and filename.
+ */
+FILE *open_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file) {
+        // File exists, close it and reopen in append mode
+        fclose(file);
+        file = fopen(filename, "a");
+    } else {
+        // File does not exist, open in write mode
+        file = fopen(filename, "w");
+    }
+
+    return file;
+}
+
 
 /*
 Desc: Takes in a file object and reads until it reaches EOF or newline
@@ -167,22 +192,45 @@ void free_str_array(str_array arr) {
 
 /*
 Desc: Reads the html files that were created by web_scraper.c and then creates
-an array of FILE* to then be used for multicount
+an array of FILE* to then be used for multicount. It then reads the file to make sure
+it's a valid HTML file. If it has FAILURE because the scraper failed to fetch a website,
+then instead of storing a FILE* ptr, it will instead store NULL to inform counter not
+to count this file.
 
 Input:
     int size: Number of html files created
 */
 FILE** create_file_array(int size) {
+    // Allocate an array of file ptrs to be read from
     FILE** files = (FILE**)malloc(sizeof(FILE*) * size);
     for (int i = 0; i < size; i++) {
+        // Get string for filename and open file
         char filename[64];
         snprintf(filename, 64, "output/site_%d.html", i);
         files[i] = fopen(filename, "r");
 
+        // If file failed to open, return NULL
         if (!files[i]) {
             perror("Failed to open output file");
             return NULL;
         }
+        
+        /* !!!LAST CHECK!!!! */
+        // Read one line from the file
+        char* line = readline_from_file(files[i]);
+        
+        // If the file's only contents is FAILURE, it is not
+        // a valid HTML file. Close the file and make the ptr NULL
+        if (strcmp(line, "FAILURE") == 0) {
+            fclose(files[i]);
+            files[i] = NULL;
+        } else {
+            // Return FILE* ptr to the begining of the file buffer
+            rewind(files[i]);
+        }
+        
+        //Free memory
+        free(line);
     }
 
     return files;

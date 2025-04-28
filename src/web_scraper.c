@@ -6,6 +6,7 @@ TODO: Remove need to specify file extension in filename parameter
 */
 
 #include "../include/web_scraper.h"
+#include <curl/curl.h>
 
 
 // Function Declarations for Private Functions
@@ -22,9 +23,9 @@ size_t write_to_file(char *data, size_t size, size_t bytes, char *filename);
 
 	@param filename : The name of the output file
 	@param website: The website URL to fetch from
-	@return : SUCCESS or ERROR code
+	@return : SUCCESS or ERROR CURLcode code
 */
-enum CURL_CODE web_scraper(const char *filename, const char *website) {
+CURLcode web_scraper(const char *filename, const char *website) {
 	CURL *curl;
 	CURLcode result;
 
@@ -34,7 +35,7 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	// Error handling when curl is equal to NULL.
 	if (!curl) {
 		fprintf(stderr, "Error: HTTP request failed.\n");
-		return ERROR;
+		return CURLE_FAILED_INIT;
 	}
 
 	// Sets the URL used to perform the fetch request.
@@ -49,15 +50,17 @@ enum CURL_CODE web_scraper(const char *filename, const char *website) {
 	// Perform the fetch request with the specified CURLOPT options.
 	result = curl_easy_perform(curl);
 	// Error handling when the fetch request is unsuccessful.
-	if (result != CURLE_OK) {
-		fprintf(stderr, "Error: %s\n", curl_easy_strerror(result));
-		return ERROR;
-	}
 
 	// Closes and frees up resources associated with this handle.
 	curl_easy_cleanup(curl);
 
-	return SUCCESS;
+	if (result != CURLE_OK) {
+		fprintf(stderr, "Error: %s\n", curl_easy_strerror(result));
+		return result;
+	}
+
+
+	return CURLE_OK;
 }
 
 /*
@@ -82,7 +85,7 @@ size_t write_to_file(char *data, size_t size, size_t bytes, char *filename) {
 	// Error handling when the file cannot be opened.
 	if (file == NULL) {
 		printf("Error: Error opening file!\n");
-		return ERROR;
+		return -1;
 	}
 
 	// Loops through each byte of the data and appends it to the file

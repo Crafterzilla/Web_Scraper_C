@@ -1,6 +1,5 @@
 #include "include/multithread.h"
 #include "include/utils.h"
-#include <stdio.h>
 
 
 int main(const int argc, const char** argv) {
@@ -11,7 +10,7 @@ int main(const int argc, const char** argv) {
     // If there are no three args, then exit program!
     if (argc != 3) {
         fprintf(stderr, "Missing args!!!\n");
-        fprintf(stderr, "Run with ./scraper html.file word.file\n");
+        fprintf(stderr, "Run with ./scraper url_to_fetch.file word_to_be_counted.file\n");
         return 1;
     }
     
@@ -37,24 +36,29 @@ int main(const int argc, const char** argv) {
         printf("[%d] ID for %s\n", i, url_arr.strings[i]);
     }
     fclose(id_file);
- 
+    
+    puts("Step 3");
     // Step 3: Open scraped files    
     FILE** files = create_file_array(url_arr.size);
 
     // Step 4: Read words from file
     str_array words_arr = read_str_file(argv[2]);
     
+    puts("Step 4");
     // Step 5: Multithreading couting of all files and each of the words
     if (multicount(files, url_arr, words_arr.strings, words_arr.size) != NO_ERROR) {
         fprintf(stderr, "Error counting html files\n");
         return 1;
     };
 
+    puts("Step 5");
 
     // Step 6: FREE ALL MEMORY
     // Free files array
     for (int i = 0; i < url_arr.size; i++) {
-        fclose(files[i]);
+        // If the file ptr exists
+        if (files[i])
+            fclose(files[i]);
     }
 
     free(files);

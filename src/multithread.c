@@ -34,6 +34,39 @@ typedef struct {
     char* filename;          // File to save the contents of site count
 } count_job;
 
+
+/*
+ * Function: deal_with_failed_scrape
+ * ----------------------------
+ * This is a function to deal with the failed URL that the web_scraper could not fetch.
+ * It writes FAILURE to html file, so that the counter function does not count it, and
+ * it adds the url to a failure.list file to log the websites that failed
+ *
+ * char* filename: filename where the html was supposed to go. Now it will just have FAILURE
+ *                 written to it
+ * char* url: the url that failed
+ */
+void deal_with_failed_scrape(char* filename, char* url) {
+    //Inform user of url that failed to be scraped
+    fprintf(stderr, "Error scraping URL: %s\n", url);
+   
+    // DEAL WITH FAILURE!!! 
+    // Step 1: Output URL to a failure file
+    const char* failure_file = "output/failure.list";
+    // Open file in append or write mode depending if file exists
+    FILE* file = open_file(failure_file);
+
+    //Write failed url to failure list
+    fprintf(file, "%s\n", url);
+    fclose(file);
+
+
+    //Step 2: Output FAILURE to HTML file
+    FILE* html_file = fopen(filename, "w");
+    fprintf(html_file, "FAILURE\n");
+    fclose(html_file);
+}
+
 /*
  * Function: scrape_thread_func
  * ----------------------------
@@ -46,8 +79,8 @@ void* scrape_thread_func(void* arg) {
     scrape_job* job = (scrape_job*)arg;
 
     // Call web_scraper to fetch and save the site contents
-    if (web_scraper(job->filename, job->url) != NO_ERROR) {
-        fprintf(stderr, "Error scraping URL: %s\n", job->url);
+    if (web_scraper(job->filename, job->url) != CURLE_OK) {
+        deal_with_failed_scrape(job->filename, job->url);
     }
 
     // Clean up heap-allocated filename and struct
@@ -100,8 +133,9 @@ void* count_thread_func(void* arg) {
  */
 
 enum THREAD_CODE multifetch_websites(char** URL_list, const int size) {
+    //Array of pthreads the system will keep track
     pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * size);
-    
+
     for (int i = 0; i < size; ++i) {
         //Init memory for job struct and it's values
         scrape_job* job = (scrape_job*)malloc(sizeof(scrape_job));
@@ -152,10 +186,15 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, str_array urls, char** wor
     int* result_array = (int*)calloc(word_size, sizeof(int));
 
     for (int i = 0; i < urls.size; ++i) {
+        // If file is null, do not do a count for this file, nor make a count file for it
+        if (!output_HTML_files[i]) {
+            continue;
+        }
+
         // Set up a job for this thread
         count_job* job = malloc(sizeof(count_job));
-        job->url = urls.strings[i];
         job->file = output_HTML_files[i];
+        job->url = urls.strings[i];
         job->words = words;
         job->word_count = word_size;
         job->result_array = result_array;
@@ -175,7 +214,8 @@ enum THREAD_CODE multicount(FILE** output_HTML_files, str_array urls, char** wor
 
     // Wait for all threads to finish
     for (int i = 0; i < urls.size; ++i) {
-        pthread_join(threads[i], NULL);
+        if (output_HTML_files[i])
+            pthread_join(threads[i], NULL);
     }
 
     // Output final aggregated results
