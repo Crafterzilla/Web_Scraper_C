@@ -221,7 +221,11 @@ FILE** create_file_array(int size) {
         
         // If the file's only contents is FAILURE, it is not
         // a valid HTML file. Close the file and make the ptr NULL
-        if (strcmp(line, "FAILURE") == 0) {
+        if (!line) {
+            fclose(files[i]);
+            files[i] = NULL;
+        }
+        else if (strcmp(line, "FAILURE") == 0) {
             fclose(files[i]);
             files[i] = NULL;
         } else {
