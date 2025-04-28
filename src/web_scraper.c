@@ -53,7 +53,7 @@ CURLcode web_scraper(const char *filename, const char *website) {
 
 	// Closes and frees up resources associated with this handle.
 	curl_easy_cleanup(curl);
-
+    
 	if (result != CURLE_OK) {
 		fprintf(stderr, "Error: %s\n", curl_easy_strerror(result));
 		return result;

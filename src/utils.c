@@ -211,8 +211,8 @@ FILE** create_file_array(int size) {
 
         // If file failed to open, return NULL
         if (!files[i]) {
-            perror("Failed to open output file");
-            return NULL;
+            fprintf(stderr, "Failed to open output file: ID %d\n", i);
+            continue;;
         }
         
         /* !!!LAST CHECK!!!! */
